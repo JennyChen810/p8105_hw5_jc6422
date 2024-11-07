@@ -54,4 +54,38 @@ results %>%
   theme_minimal()
 ```
 
-This plot shows the relationship between the probability of shared birthday and group size, as the group size increases, the probability of at least two people sharing a birthday rises rapidly. This growth is nonlinear. The probability increasing quickly at first and flattening as it appraches 1 according to the group size appraches to 50.
+This plot shows the relationship between the probability of shared birthday and group size, as the group size increases, the probability of at least two people sharing a birthday rises rapidly. This growth is nonlinear. The probability increasing quickly at first and flattening as it approaches 1 according to the group size approaches to 50.
+
+## Question 2
+
+Simulation parameters
+
+```{r}
+n = 30         
+sigma = 5  
+mu = 0
+datasets = 5000 
+alpha = 0.05
+mu_values = 1:6
+```
+
+Run the simulation by using `broom::tidy` to clean the output of `t.test`. 
+
+```{r}
+output = vector ("list", length = datasets)
+  
+for ( i in 1:datasets) {
+  sample_data = rnorm(n, mean = mu, sd = sigma)
+  t_test = broom::tidy(t.test(sample_data, mu = mu))
+  
+  output[[i]] = tibble(
+    mu = mu,
+    mean_estimate = t_test$estimate,
+    p_value = t_test$p.value,
+    reject_null = t_test$p.value<alpha
+  )
+  }
+sim_results = bind_rows(output)
+sim_results
+```
+
