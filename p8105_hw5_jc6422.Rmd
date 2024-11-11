@@ -178,3 +178,27 @@ data_summary = data %>%
 data_summary
 ```
 
+For the city of Baltimore, MD, use ` pop.test` function to estimate the proportion of homicides that are unsolved.
+
+```{r}
+baltimore_data = data_summary %>% filter(city_state == "Baltimore, MD")
+baltimore_test = prop.test(baltimore_data$unsolved_homicides, baltimore_data$total_homicides)
+baltimore_result = broom::tidy(baltimore_test)
+
+baltimore_result
+
+```
+Run `prop.test` for each of the cities in the dataset, and create a tidy dataframe with estimated proportions and CIs for each city.
+
+```{r}
+city_results = data_summary %>%
+  mutate(
+    test_result = purrr::map2(unsolved_homicides, total_homicides, ~ prop.test(.x, .y)),
+    tidy_result = purrr::map(test_result, broom::tidy)
+  ) %>%
+  unnest(tidy_result) %>%
+  select(city_state, estimate, conf.low, conf.high)
+
+city_results
+```
+
