@@ -6,7 +6,7 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(tidyverse)
 ```
 
@@ -58,34 +58,36 @@ This plot shows the relationship between the probability of shared birthday and 
 
 ## Question 2
 
-Simulation parameters
+Define a function to obtain the estimate and p-value
 
 ```{r}
 n = 30         
 sigma = 5  
-mu = 0
-datasets = 5000 
+times = 5000 
 alpha = 0.05
-mu_values = 1:6
-```
-
-Run the simulation by using `broom::tidy` to clean the output of `t.test`. 
-
-```{r}
-output = vector ("list", length = datasets)
-  
-for ( i in 1:datasets) {
-  sample_data = rnorm(n, mean = mu, sd = sigma)
-  t_test = broom::tidy(t.test(sample_data, mu = mu))
-  
-  output[[i]] = tibble(
-    mu = mu,
-    mean_estimate = t_test$estimate,
-    p_value = t_test$p.value,
-    reject_null = t_test$p.value<alpha
-  )
+get_estimate_pvalue = function(mu) {
+  estimate = numeric(times)
+  pvalue = numeric(times)
+  for(i in 1:times) {
+    x = rnorm(n, mu, sigma)
+    t_test_result = broom::tidy(t.test(x, mu = 0, alternative = "two.sided"))
+    estimate[i] = as.numeric(t_test_result$estimate)
+    pvalue[i] = as.numeric(t_test_result$p.value)
   }
-sim_results = bind_rows(output)
-sim_results
+  result = data.frame(
+    mu = rep(mu, times),
+    estimate = estimate,
+    pvalue = pvalue
+  )
+  return(result)
+}
+
+# get the estimate and p-value with different mu
+result = get_estimate_pvalue(mu = 0)
+for(i in 1:6){
+  result = rbind(result, get_estimate_pvalue(mu = i))
+}
+
+
 ```
 
