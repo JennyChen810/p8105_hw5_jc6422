@@ -91,3 +91,24 @@ for(i in 1:6){
 
 ```
 
+Calculate the proportion of times the null was rejected. 
+
+```{r}
+df1 = result %>%
+  group_by(mu) %>%
+  summarise(proportion = mean(pvalue < 0.05))
+```
+
+Make a plot showing the relationship between effect size and power of the test.
+
+```{r}
+ggplot(df1, aes(x = mu, y = proportion)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "True Mean (μ)", y = "Power") +
+  ggtitle("Power vs Effect Size") +
+  theme_minimal()
+```
+
+From this figure, we can observe that the larger the effect size, the higher the power.
+
