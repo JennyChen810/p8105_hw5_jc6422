@@ -154,3 +154,27 @@ ggplot(df, aes(x = mu, y = estimate, color = group, group = group)) +
 
 From this figure, we can see that the the sample average of μ across tests for which the null is rejected approximately is not equal to the true value of μ. Because only those samples with large effects are more likely to be rejected, the average of these samples with large effects will be larger than the true value.
 
+## Question 3
+
+Load the data
+
+```{r}
+data = read_csv("homicide-data.csv")
+```
+
+In this dataset, there are `r data %>% distinct(city) %>% nrow()` unique cities. The number of homicides with an unsolved status (i.e., marked as “Closed without arrest” or “Open/No arrest”) is `r sum(data$disposition %in% c("Closed without arrest", "Open/No arrest"), na.rm = TRUE)`. The variables are `r names(data)`
+
+
+Create a `city_state` variable and then summarize within cities.
+
+```{r}
+data_summary = data %>%
+  mutate(city_state = str_c(city, ", ", state)) %>%
+  group_by(city_state) %>%
+  summarize(
+    total_homicides = n(),
+    unsolved_homicides = sum(disposition %in% c("Closed without arrest", "Open/No arrest"))
+  )
+data_summary
+```
+
