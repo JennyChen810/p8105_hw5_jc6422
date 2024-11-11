@@ -64,7 +64,6 @@ Define a function to obtain the estimate and p-value
 n = 30         
 sigma = 5  
 times = 5000 
-alpha = 0.05
 get_estimate_pvalue = function(mu) {
   estimate = numeric(times)
   pvalue = numeric(times)
@@ -111,4 +110,47 @@ ggplot(df1, aes(x = mu, y = proportion)) +
 ```
 
 From this figure, we can observe that the larger the effect size, the higher the power.
+
+Calculate the average estimate of μ
+
+```{r}
+df2 = result %>%
+  group_by(mu) %>%
+  summarise(estimate = mean(estimate))
+```
+
+Make a plot showing the average estimate of μ and true μ
+
+```{r}
+ggplot(df2, aes(x = mu, y = estimate)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "True Mean (μ)", y = "Average Estimate of μ") +
+  ggtitle("Average Estimated μ vs True μ") +
+  theme_minimal()
+```
+Calculate the average estimate of μ only in samples for which the null was rejected.
+
+```{r}
+df3 = result %>%
+  filter(pvalue < 0.05) %>%
+  group_by(mu) %>%
+  summarise(estimate = mean(estimate))
+```
+
+Make a plot overlay on the first plot
+
+```{r}
+df = rbind(df2, df3)
+df$group = c(rep("Average Estimate of μ", 7), rep("Average Estimate of μ (μ reject H0)", 7))
+
+ggplot(df, aes(x = mu, y = estimate, color = group, group = group)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "True Mean (μ)", y = "Average Estimate of μ") +
+  ggtitle("Average Estimated μ vs True μ") +
+  theme_minimal()
+```
+
+From this figure, we can see that the the sample average of μ across tests for which the null is rejected approximately is not equal to the true value of μ. Because only those samples with large effects are more likely to be rejected, the average of these samples with large effects will be larger than the true value.
 
