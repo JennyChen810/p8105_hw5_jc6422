@@ -202,3 +202,20 @@ city_results = data_summary %>%
 city_results
 ```
 
+Create a plot that shows the estimates and CIs for each city.
+
+```{r,fig.height=10, fig.width= 7}
+ggplot(city_results, aes(x = reorder(city_state, estimate), y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3) +
+  coord_flip() +
+  labs(
+    title = "Proportion of Unsolved Homicides by City",
+    x = "City",
+    y = "Proportion of Unsolved Homicides"
+  ) +
+  theme_minimal()
+```
+
+This plot shows the proportion of unsolved homicides for various U.S. cities. Chicago, IL, have the highest proportions of unsolved homicides, with estimates close to 0.75. Tulsa, AL, have the lowest unsolved homicide rates, with estimates close to 0. Error bars show the 95% confidence interval for each estimate. Chicago, IL tend to have narrower intervals, suggesting that these estimates are reliable. Tulsa, AL, has a wider confidence interval, which suggests a greater uncertainty.
+
