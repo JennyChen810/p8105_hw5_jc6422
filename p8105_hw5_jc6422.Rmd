@@ -207,6 +207,8 @@ conf_high = baltimore_result$conf.high
 conf_high
 ```
 
+Based on the result, the estimate proportion is 0.646, and the 95% CI is [0.628, 0.663]
+
 Run `prop.test` for each of the cities in the dataset, and create a tidy dataframe with estimated proportions and CIs for each city.
 
 ```{r}
