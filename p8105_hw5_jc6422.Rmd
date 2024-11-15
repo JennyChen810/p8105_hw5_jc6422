@@ -104,14 +104,14 @@ Make a plot showing the relationship between effect size and power of the test.
 ggplot(df1, aes(x = mu, y = proportion)) +
   geom_point() +
   geom_line() +
-  labs(x = "True Mean (μ)", y = "Power") +
+  labs(x = "True Mean (mu)", y = "Power") +
   ggtitle("Power vs Effect Size") +
   theme_minimal()
 ```
 
 From this figure, we can observe that the larger the effect size, the higher the power.
 
-Calculate the average estimate of μ
+Calculate the average estimate of mu
 
 ```{r}
 df2 = result %>%
@@ -119,17 +119,17 @@ df2 = result %>%
   summarise(estimate = mean(estimate))
 ```
 
-Make a plot showing the average estimate of μ and true μ
+Make a plot showing the average estimate of mu and true mu
 
 ```{r}
 ggplot(df2, aes(x = mu, y = estimate)) +
   geom_point() +
   geom_line() +
-  labs(x = "True Mean (μ)", y = "Average Estimate of μ") +
-  ggtitle("Average Estimated μ vs True μ") +
+  labs(x = "True Mean (mu)", y = "Average Estimate of mu") +
+  ggtitle("Average Estimated mu vs True mu") +
   theme_minimal()
 ```
-Calculate the average estimate of μ only in samples for which the null was rejected.
+Calculate the average estimate of mu only in samples for which the null was rejected.
 
 ```{r}
 df3 = result %>%
@@ -142,17 +142,17 @@ Make a plot overlay on the first plot
 
 ```{r}
 df = rbind(df2, df3)
-df$group = c(rep("Average Estimate of μ", 7), rep("Average Estimate of μ (μ reject H0)", 7))
+df$group = c(rep("Average Estimate of mu", 7), rep("Average Estimate of mu (mu reject H0)", 7))
 
 ggplot(df, aes(x = mu, y = estimate, color = group, group = group)) +
   geom_point() +
   geom_line() +
-  labs(x = "True Mean (μ)", y = "Average Estimate of μ") +
-  ggtitle("Average Estimated μ vs True μ") +
+  labs(x = "True Mean (mu)", y = "Average Estimate of mu") +
+  ggtitle("Average Estimated mu vs True mu") +
   theme_minimal()
 ```
 
-From this figure, we can see that the the sample average of μ across tests for which the null is rejected approximately is not equal to the true value of μ. Because only those samples with large effects are more likely to be rejected, the average of these samples with large effects will be larger than the true value.
+From this figure, we can see that the the sample average of mu across tests for which the null is rejected approximately is not equal to the true value of mu. Because only those samples with large effects are more likely to be rejected, the average of these samples with large effects will be larger than the true value.
 
 ## Question 3
 
@@ -162,36 +162,55 @@ Load the data
 data = read_csv("homicide-data.csv")
 ```
 
-In this dataset, there are `r data %>% distinct(city) %>% nrow()` unique cities. The number of homicides with an unsolved status (i.e., marked as “Closed without arrest” or “Open/No arrest”) is `r sum(data$disposition %in% c("Closed without arrest", "Open/No arrest"), na.rm = TRUE)`. The variables are `r names(data)`
+In this dataset, there are `r data %>% distinct(city) %>% nrow()` unique cities. There are `r nrow(data)`observations. There are `r ncol(data)` variables. The variables are `r names(data)`
 
 
 Create a `city_state` variable and then summarize within cities.
 
 ```{r}
-data_summary = data %>%
+summary = data %>%
   mutate(city_state = str_c(city, ", ", state)) %>%
   group_by(city_state) %>%
   summarize(
     total_homicides = n(),
     unsolved_homicides = sum(disposition %in% c("Closed without arrest", "Open/No arrest"))
   )
-data_summary
+summary
 ```
 
 For the city of Baltimore, MD, use ` pop.test` function to estimate the proportion of homicides that are unsolved.
 
 ```{r}
-baltimore_data = data_summary %>% filter(city_state == "Baltimore, MD")
+baltimore_data = summary %>% 
+  filter(city_state == "Baltimore, MD") 
+  
 baltimore_test = prop.test(baltimore_data$unsolved_homicides, baltimore_data$total_homicides)
+baltimore_test
+```
+
+Apply `broom::tidy` to this project and pull the estimated proportion and confidence intervals.
+
+```{r}
 baltimore_result = broom::tidy(baltimore_test)
 
-baltimore_result
-
+estimate_prop = baltimore_result$estimate
+estimate_prop
 ```
+
+```{r}
+conf_low = baltimore_result$conf.low
+conf_low
+```
+
+```{r}
+conf_high = baltimore_result$conf.high
+conf_high
+```
+
 Run `prop.test` for each of the cities in the dataset, and create a tidy dataframe with estimated proportions and CIs for each city.
 
 ```{r}
-city_results = data_summary %>%
+city = summary %>%
   mutate(
     test_result = purrr::map2(unsolved_homicides, total_homicides, ~ prop.test(.x, .y)),
     tidy_result = purrr::map(test_result, broom::tidy)
@@ -199,20 +218,20 @@ city_results = data_summary %>%
   unnest(tidy_result) %>%
   select(city_state, estimate, conf.low, conf.high)
 
-city_results
+city
 ```
 
 Create a plot that shows the estimates and CIs for each city.
 
 ```{r,fig.height=10, fig.width= 7}
-ggplot(city_results, aes(x = reorder(city_state, estimate), y = estimate)) +
+ggplot(city, aes(x = reorder(city_state,estimate), y = estimate)) +
   geom_point() +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3) +
   coord_flip() +
   labs(
     title = "Proportion of Unsolved Homicides by City",
     x = "City",
-    y = "Proportion of Unsolved Homicides"
+    y = "Estimated Proportion of Unsolved Homicides"
   ) +
   theme_minimal()
 ```
